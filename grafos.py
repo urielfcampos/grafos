@@ -1,3 +1,4 @@
+import numpy as np
 
 class node:
     name:str
@@ -28,6 +29,9 @@ class grafos:
     adjMatrix = {}
     adjList = {}
     counter:int
+    color = {"white": [], "gray": [], "black": []}
+    pred = {}
+    time = {}
     def file_treatment(self):
         with open("grafo.txt", "r") as file:
             for i, l in enumerate(file):
@@ -157,9 +161,9 @@ class grafos:
             for x in range(len(self.adjMatrix[edge])):
                 if self.adjMatrix[edge][x]== "1":
                     names.append(self.find_name(x))
-            print(names)
+            return names
         if type_rep==1:
-            print(self.adjList[edge])
+            return self.adjList[edge]
     def remove_node(self,type,node):
         if type == 0:
             self.adjMatrix.pop(node,None)
@@ -170,6 +174,101 @@ class grafos:
             for y in self.adjList:
                 if node in self.adjList[y]:
                     self.adjList[y].remove(node)
+    def DepthFirstSearch(self,source,grafo,function_value):
+        global counter_timer
+        counter_timer =0
+        def visitDFS(node):
+            global counter_timer
+            counter_timer += 1
+            print("Visitando",node)
+            color["white"].remove(node)
+            color["gray"].append(node)
+            time[node] =counter_timer
+            adjs = self.find_adj(node,0)
+            for x in adjs:
+                if x in color["white"]:
+                    pred[x] = node
+                    visitDFS(x)
+            color["gray"].remove(node)
+            color["black"].append(node)
+            counter_timer +=1
+            time_final[node]+= counter_timer
+            print("Finalizando",node)
+
+        color ={"white":[],"gray":[],"black":[]}
+        pred = {}
+        time ={}
+        time_final = {}
+        print("Comecando busca em profundidade")
+        for x in grafo:
+            color["white"].append(x)
+            pred.update({x:[None]})
+            time.update({x:counter_timer})
+            time_final.update({x:counter_timer})
+        visitDFS(source)
+        for x in grafo:
+            if x in color["white"]:
+                visitDFS(x)
+        print(time_final)
+        print(time)
+        print(color["black"])
+        finalizado = {}
+        print(pred)
+        for x in grafo:
+            finalizado.update({x:[pred[x][0],time[x],time_final[x]]})
+        for x in finalizado:
+            print(x,finalizado[x])
+
+        if (function_value == "0"):
+            return finalizado
+        else:
+            return time_final
+
+    def FindConnectivity(self):
+        transposed=self.adjMatrix.copy()
+        matriz = []
+        for x in transposed:
+            matriz.append(transposed[x])
+        transposedmatriz = np.transpose(matriz)
+        transposedmatriz = transposedmatriz.tolist()
+        print(list(transposedmatriz))
+        for x in transposed:
+            for y in list(transposedmatriz):
+                transposed[x] = y[:]
+        final1 = self.DepthFirstSearch("0",self.adjMatrix,"1").copy()
+        stacked=[]
+        for x in final1:
+            stacked.append(final1[x])
+        print(stacked)
+        stacked = sorted(stacked,reverse=True)
+        print(stacked)
+        final2 = final1.copy()
+        order_dfs = []
+        for y in stacked:
+            for x in final2:
+                if y == final2[x]:
+                    order_dfs.append(x)
+        test_something = []
+        for x in order_dfs:
+            test_something.append(self.DepthFirstSearch(x,transposed,"0"))
+        print(test_something)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -179,7 +278,6 @@ if __name__ == '__main__':
     #print(g.identify_edge(0,"0","1"))
     #g.find_adj("4",0)
     #g.addNode(0)
-    print(g.adjList)
-    g.remove_node(1,"0")
-    print(g.adjList)
+    #g.DepthFirstSearch("0")
+    g.FindConnectivity()
 
