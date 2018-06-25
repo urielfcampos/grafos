@@ -1,4 +1,5 @@
 import numpy as np
+import operator
 class node:
     name:str
     value:int
@@ -186,7 +187,6 @@ class grafos:
             global  connected
             counter_timer += 1
             connected.append(node)
-            print("Visitando",node)
             color["white"].remove(node)
             color["gray"].append(node)
             time[node] =counter_timer
@@ -199,7 +199,6 @@ class grafos:
             color["black"].append(node)
             counter_timer +=1
             time_final[node]+= counter_timer
-            print("Finalizando",node)
 
         def iterate_paths(vertex):
             path =[]
@@ -239,9 +238,11 @@ class grafos:
         #print(pred)
 
         for x in grafo:
-            finalizado.update({x:[pred[x][0],time[x],time_final[x]]})
-        #for x in finalizado:
-            #print(x,finalizado[x])
+            finalizado.update({x:time[x]})
+
+        sorted_visita = sorted(finalizado.items(),key=operator.itemgetter(1))
+        for x in sorted_visita:
+            print("Vertice:"+list(x)[0])
 
         if (function_value == "5"):
             paths =[]
@@ -318,6 +319,6 @@ if __name__ == '__main__':
     #print(g.identify_edge(0,"0","1"))
     #g.find_adj("4",0)
     #g.addNode(0)
-    #g.DepthFirstSearch("0",g.adjMatrix,"0")
-    g.FindConnectivity()
+    g.DepthFirstSearch("0",g.adjMatrix,"3")
+    #g.FindConnectivity()
 
