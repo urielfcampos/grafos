@@ -1,5 +1,6 @@
 import numpy as np
 import operator
+import timing
 class node:
     name:str
     value:int
@@ -32,6 +33,8 @@ class grafos:
     color = {"white": [], "gray": [], "black": []}
     pred = {}
     time = {}
+    pai = dict()
+    rank =dict()
     def file_treatment(self):
         with open("grafo.txt", "r") as file:
             for i, l in enumerate(file):
@@ -43,12 +46,13 @@ class grafos:
             type = file.readline()
             for x in range(i):
                 input_test = file.readline()
-                print(input_test)
+                #print(input_test)
                 intermediateSeperator = input_test.find("[")
                 secondIntermediateSeperator = input_test.find("]")
-                node_names.append(input_test[0])
+                node_names.append(input_test[0:input_test.find(":")])
                 intermediateString = input_test[intermediateSeperator + 1:secondIntermediateSeperator]
-                node_values.append(list(intermediateString))
+                intermediateString = intermediateString.replace(',' , ' ')
+                node_values.append(intermediateString.split())
             counter = 0
             for x in node_values:
                 for y in x:
@@ -93,6 +97,7 @@ class grafos:
                         return 0
                 self.nodes_list.append(newNode)
                 repr = ["0" for i in range(len(self.adjMatrix)+1)]
+
                 self.adjMatrix.update({newNode.name:repr})
                 self.updateAdjUndirected(newNode, type)
 
@@ -164,6 +169,12 @@ class grafos:
             return names
         if type_rep==1:
             return self.adjList[edge]
+        if type_rep ==2:
+            for x in range(len(grafo[edge])):
+                if int(grafo[edge][x])>= int("1"):
+                    names.append((int(grafo[edge][x]),edge,self.find_name(x)))
+            return names
+
     def remove_node(self,type,node):
         if type == 0:
             self.adjMatrix.pop(node,None)
@@ -174,6 +185,7 @@ class grafos:
             for y in self.adjList:
                 if node in self.adjList[y]:
                     self.adjList[y].remove(node)
+
 
 
 
@@ -236,7 +248,7 @@ class grafos:
         #print(color["black"])
         finalizado = {}
         #print(pred)
-
+        print("ordem de visita")
         for x in grafo:
             finalizado.update({x:time[x]})
 
@@ -292,23 +304,82 @@ class grafos:
                     order_dfs.append(x)
         SCC = []
         SCC = self.DepthFirstSearch(order_dfs,transposed,"0")
-        print("Componentes fortemente conexos :",SCC)
+        print("Componentes fortemente conexos :")
+        formatado = ""
+        for x in SCC :
+            if x== "":
+                formatado+= "/"
+            else:
+                formatado += x+"-"
+        formatado = formatado[0:-1]
+        for x in formatado.split("/"):
+            print("Vertices:",x[0:-1])
 
 
+    def make_set(self,v):
+        self.pai[v] = v
+        self.rank[v] = 0
 
+    def find(self,v):
+        if self.pai[v] != v:
+           self.pai[v] = self.find(self.pai[v])
+        return self.pai[v]
 
+    def union(self,v1, v2):
+        raiz1 = self.find(v1)
+        raiz2 = self.find(v2)
+        if raiz1 != raiz2:
+            if self.rank[raiz1] > self.rank[raiz2]:
+                self.pai[raiz2] = raiz1
+            else:
+                self.pai[raiz1] = raiz2
+            if self.rank[raiz1] == self.rank[raiz2]:
+                self.rank[raiz2] += 1
 
+    def kruskal(self,graph):
+        A = []
+        B =[]
+        for v in graph:
+            self.make_set(v)
+            AGM = set()
+        for v in graph:
+            A.append(self.find_adj(v, 2, graph))
+        for i in A:
+            for y in i:
+                B.append(y)
 
+        B.sort()
+        for i in B:
+            peso, v1, v2 = i
+            if self.find(v1) != self.find(v2):
+                self.union(v1, v2)
+                AGM.add(i)
+        return sorted(AGM)
 
+    def add_edge(self, node1, node2, type):
+        if type == 1:
+            if self.adjMatrix[node1][self.find_value(node2)] == "1":
+                print("Aresta ja existe")
+            else:
+                self.adjMatrix[node1][self.find_value(node2)] = "1"
+                self.adjMatrix[node2][self.find_value(node1)] = "1"
+        elif type == 0:
+            self.adjMatrix[node1][self.find_value(node2)] = "1"
+        elif type == 2:
+            self.adjMatrix[node1][self.find_value(node2)] = input("Peso : ")
 
-
-
-
-
-
-
-
-
+    def convert_to_djk(self):
+        grafo = self.adjMatrix.copy()
+        grafo_convertido = {}
+        names = []
+        for x in grafo:
+            names.append(self.find_adj(x, 2, grafo))
+            for y in names:
+                if y == []:
+                    grafo_convertido.update({x: None})
+                else:
+                    grafo_convertido.update({x: {list(y[0])[0]: list(y[0])[1]}})
+        print(grafo_convertido)
 
 
 
@@ -316,9 +387,12 @@ class grafos:
 if __name__ == '__main__':
     g = grafos()
     g.file_treatment()
-    #print(g.identify_edge(0,"0","1"))
+    #for x in g.adjList:
+       #print("Adjaçentes de "+x,g.find_adj(x,1,g.adjList))
+    #print(len(g.adjMatrix["0"]))
+    #print(len(g.adjMatrix["8"]))
     #g.find_adj("4",0)
     #g.addNode(0)
-    g.DepthFirstSearch("0",g.adjMatrix,"3")
+    #g.DepthFirstSearch("0",g.adjMatrix,"3")
     #g.FindConnectivity()
-
+    print(g.kruskal(g.adjMatrix))
