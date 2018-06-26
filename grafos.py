@@ -164,6 +164,12 @@ class grafos:
             return names
         if type_rep==1:
             return self.adjList[edge]
+        if type_rep ==2:
+            for x in range(len(grafo[edge])):
+                if int(grafo[edge][x])>= 1:
+                    names.append((self.find_name(x),grafo[edge][x]))
+            return names
+
     def remove_node(self,type,node):
         if type == 0:
             self.adjMatrix.pop(node,None)
@@ -174,9 +180,6 @@ class grafos:
             for y in self.adjList:
                 if node in self.adjList[y]:
                     self.adjList[y].remove(node)
-
-
-
     def DepthFirstSearch(self,source,grafo,function_value):
         global counter_timer
         counter_timer =0
@@ -265,7 +268,6 @@ class grafos:
             return time_final
         else:
             return connected
-
     def FindConnectivity(self):
         transposed=self.adjMatrix.copy()
         matriz = []
@@ -293,6 +295,39 @@ class grafos:
         SCC = []
         SCC = self.DepthFirstSearch(order_dfs,transposed,"0")
         print("Componentes fortemente conexos :",SCC)
+    def add_edge(self,node1,node2,type):
+        if type == 1:
+            if self.adjMatrix[node1][self.find_value(node2)] == "1":
+                print("Aresta ja existe")
+            else:
+                self.adjMatrix[node1][self.find_value(node2)] = "1"
+                self.adjMatrix[node2][self.find_value(node1)] = "1"
+        elif type == 0:
+            self.adjMatrix[node1][self.find_value(node2)] = "1"
+        elif type == 2:
+            self.adjMatrix[node1][self.find_value(node2)] = input("Peso : ")
+
+    def convert_to_djk(self):
+        grafo = self.adjMatrix.copy()
+        grafo_convertido ={}
+        names = []
+        for x in grafo:
+            names.append(self.find_adj(x,2,grafo))
+            for y in names:
+                if y == []:
+                    grafo_convertido.update({x:None})
+                else:
+                    grafo_convertido.update({x:{list(y[0])[0]:list(y[0])[1]}})
+        print(grafo_convertido)
+
+
+        #print(grafo_convertido)
+        #for x in names:
+
+
+
+
+
 
 
 
@@ -316,9 +351,10 @@ class grafos:
 if __name__ == '__main__':
     g = grafos()
     g.file_treatment()
+    g.convert_to_djk()
     #print(g.identify_edge(0,"0","1"))
     #g.find_adj("4",0)
     #g.addNode(0)
-    g.DepthFirstSearch("0",g.adjMatrix,"3")
+    #g.DepthFirstSearch("0",g.adjMatrix,"3")
     #g.FindConnectivity()
 
