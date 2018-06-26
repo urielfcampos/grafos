@@ -1,9 +1,16 @@
 import numpy as np
 import operator
+import timing
+import bell
+import dijk
+import floy
+import kruskaltry
+
 class node:
     name:str
     value:int
     matriz:list
+
 
     def __init__(self,name,value,matriz):
         self.name = name
@@ -26,12 +33,15 @@ class grafos:
      "F": [0, 1, 0, 0, 1, 0, 0, 1],
      "G": [0, 1, 0, 1, 1, 0, 0, 1],
      "H": [0, 0, 1, 0, 0, 1, 1, 0]} """
+    type_repr = ""
     adjMatrix = {}
     adjList = {}
     counter:int
     color = {"white": [], "gray": [], "black": []}
     pred = {}
     time = {}
+    pai = dict()
+    rank =dict()
     def file_treatment(self):
         with open("grafo.txt", "r") as file:
             for i, l in enumerate(file):
@@ -41,14 +51,16 @@ class grafos:
             node_values = []
             file.seek(0)
             type = file.readline()
+            self.type_repr = type.strip("\n")
             for x in range(i):
                 input_test = file.readline()
-                print(input_test)
+                #print(input_test)
                 intermediateSeperator = input_test.find("[")
                 secondIntermediateSeperator = input_test.find("]")
-                node_names.append(input_test[0])
+                node_names.append(input_test[0:input_test.find(":")])
                 intermediateString = input_test[intermediateSeperator + 1:secondIntermediateSeperator]
-                node_values.append(list(intermediateString))
+                intermediateString = intermediateString.replace(',' , ' ')
+                node_values.append(intermediateString.split())
             counter = 0
             for x in node_values:
                 for y in x:
@@ -93,6 +105,7 @@ class grafos:
                         return 0
                 self.nodes_list.append(newNode)
                 repr = ["0" for i in range(len(self.adjMatrix)+1)]
+
                 self.adjMatrix.update({newNode.name:repr})
                 self.updateAdjUndirected(newNode, type)
 
@@ -166,8 +179,13 @@ class grafos:
             return self.adjList[edge]
         if type_rep ==2:
             for x in range(len(grafo[edge])):
-                if int(grafo[edge][x])>= 1:
-                    names.append((self.find_name(x),grafo[edge][x]))
+                if int(grafo[edge][x])>= int("1"):
+                    names.append((int(grafo[edge][x]),edge,self.find_name(x)))
+            return names
+        if type_rep == 3:
+            for x in range(len(grafo[edge])):
+                if int(grafo[edge][x])>= int("1"):
+                    names.append((self.find_name(x),int(grafo[edge][x])))
             return names
 
     def remove_node(self,type,node):
@@ -180,6 +198,10 @@ class grafos:
             for y in self.adjList:
                 if node in self.adjList[y]:
                     self.adjList[y].remove(node)
+
+
+
+
     def DepthFirstSearch(self,source,grafo,function_value):
         global counter_timer
         counter_timer =0
@@ -239,7 +261,7 @@ class grafos:
         #print(color["black"])
         finalizado = {}
         #print(pred)
-
+        print("ordem de visita")
         for x in grafo:
             finalizado.update({x:time[x]})
 
@@ -268,6 +290,7 @@ class grafos:
             return time_final
         else:
             return connected
+
     def FindConnectivity(self):
         transposed=self.adjMatrix.copy()
         matriz = []
@@ -294,8 +317,59 @@ class grafos:
                     order_dfs.append(x)
         SCC = []
         SCC = self.DepthFirstSearch(order_dfs,transposed,"0")
-        print("Componentes fortemente conexos :",SCC)
-    def add_edge(self,node1,node2,type):
+        print("Componentes fortemente conexos :")
+        formatado = ""
+        for x in SCC :
+            if x== "":
+                formatado+= "/"
+            else:
+                formatado += x+"-"
+        formatado = formatado[0:-1]
+        for x in formatado.split("/"):
+            print("Vertices:",x[0:-1])
+
+
+    def make_set(self,v):
+        self.pai[v] = v
+        self.rank[v] = 0
+
+    def find(self,v):
+        if self.pai[v] != v:
+           self.pai[v] = self.find(self.pai[v])
+        return self.pai[v]
+
+    def union(self,v1, v2):
+        raiz1 = self.find(v1)
+        raiz2 = self.find(v2)
+        if raiz1 != raiz2:
+            if self.rank[raiz1] > self.rank[raiz2]:
+                self.pai[raiz2] = raiz1
+            else:
+                self.pai[raiz1] = raiz2
+            if self.rank[raiz1] == self.rank[raiz2]:
+                self.rank[raiz2] += 1
+
+    def kruskal(self,graph):
+        A = []
+        B =[]
+        for v in graph:
+            self.make_set(v)
+            AGM = set()
+        for v in graph:
+            A.append(self.find_adj(v, 2, graph))
+        for i in A:
+            for y in i:
+                B.append(y)
+
+        B.sort()
+        for i in B:
+            peso, v1, v2 = i
+            if self.find(v1) != self.find(v2):
+                self.union(v1, v2)
+                AGM.add(i)
+        return sorted(AGM)
+
+    def add_edge(self, node1, node2, type):
         if type == 1:
             if self.adjMatrix[node1][self.find_value(node2)] == "1":
                 print("Aresta ja existe")
@@ -309,52 +383,135 @@ class grafos:
 
     def convert_to_djk(self):
         grafo = self.adjMatrix.copy()
-        grafo_convertido ={}
+        grafo_convertido = {}
         names = []
         for x in grafo:
-            names.append(self.find_adj(x,2,grafo))
+            names.append(self.find_adj(x,3,grafo))
             for y in names:
                 if y == []:
-                    grafo_convertido.update({x:None})
+                    grafo_convertido.update({x: None})
                 else:
-                    grafo_convertido.update({x:{list(y[0])[0]:list(y[0])[1]}})
+                    grafo_convertido.update({x: y})
         print(grafo_convertido)
+        self.adjList = grafo_convertido.copy()
 
+    def dij(self,fonte):
+        print("Dijkstra:\n")
+        distancias, antecedencias, existeCicloNeg = dijk.dijkstra(self.adjList, fonte)
+        if existeCicloNeg:
+            print("Existe pelo menos uma aresta com peso negativo, não se pode usar Dijkstra.")
+        else:
+            print("Distância da fonte", fonte, "para os nós:\t", distancias)
+            print("Antecessores dos nós:\t\t\t", antecedencias)
 
-        #print(grafo_convertido)
-        #for x in names:
+    def bel(self):
+        print("Bellman Ford:\n")
+        distancias, antecedencias, cicloneg = bell.bellman_ford(self.adjList, "A")
+        if cicloneg:
+            print("Ciclo negativo encontrado.")
+        else:
+            print("Distância da fonte", "A", "para os nós:\t", distancias)
+            print("Antecessores dos nós:\t\t\t", antecedencias)
+    def flo(self):
+        print("Floyd Warshall:\n")
+        print("Grafo entrada:\n")
+        grafo_flo=[]
+        grafo_matriz =[]
+        contadores = []
+        counter = 0
+        floDict = {}
+        floDict2way ={}
+        for x in self.adjMatrix:
+            grafo_flo.append(x)
+            grafo_matriz.append((self.adjMatrix[x]))
+            contadores.append(counter)
+            counter += 1
+        for x, i in zip(contadores, grafo_flo):
+            floDict.update({x: i})
+            floDict2way.update({i:x})
+        for x in range(len(grafo_matriz)):
+            for y in range(len(grafo_matriz[x])):
+                grafo_matriz[x][y] = int(grafo_matriz[x][y])
+        for i in range(len(grafo_matriz)):
+            print(grafo_matriz[i])
+        grafo, antec = floy.floyd_warshall(grafo_matriz)
+        print("\nDistâncias:\n")
+        for i in range(len(grafo_matriz)):
+            print(grafo_flo[i],grafo[i])
+        print("\nAntecedências:\n")
+        for i in range(len(grafo_matriz)):
+            print(antec[i])
+        x = floDict2way[input("Para caminhar no grafo informe o nó de partida:")]
+        y = floDict2way[input("Informe o nó de chegada:")]
+        floy.showPathFloy(antec, x, y,floDict)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def main_menu(grafo):
+    x = True
+    while(x):
+        print("Imprimir grafo: 1")
+        print("Adicionar Aresta: 2")
+        print("Adicionar vertice: 3")
+        print("Achar Componentes Conexos:4")
+        print("Rodar Busca em Profundidade:5")
+        print("Rodar Kruskal:6")
+        print("Rodar Prim:7")
+        print("Rodar Dijkstra:8")
+        print("Rodar Bellmon-ford:9")
+        print("Rodar Floyd Warshal:10")
+        x = input()
+        x = int(x)
+        if x == 1:
+            if grafo.type_repr == "0":
+                print(grafo.adjMatrix)
+                print("===================================")
+            elif grafo.type_repr =="1":
+                print(grafo.adjList)
+                print("===================================")
+        elif x == 2:
+            grafo.add_edge(input("Vertice1"),input("Vertice 2"),input("Direcionado ?(0:para Nao direcionado, 1:Para direcionado sem peso, 2:para direcionado com peso"))
+            print("===================================")
+        elif x == 3:
+            grafo.addNode(input("Tipo : 1 para lista de adj e 0 para matriz"))
+            print("===================================")
+        elif x == 4:
+            grafo.FindConnectivity()
+            print("===================================")
+        elif x == 5:
+            grafo.DepthFirstSearch("0",grafo.adjMatrix,"3")
+            print("===================================")
+        elif x == 6:
+            print(g.kruskal(g.adjMatrix))
+            print("===================================")
+        elif x == 7:
+            kruskaltry.PRIM(g.adjMatrix)
+            print("===================================")
+        elif x == 8:
+            grafo.convert_to_djk()
+            grafo.dij(input("Informe a fonte"))
+            print("===================================")
+        elif x == 9:
+            grafo.bel()
+            print("===================================")
+        elif x == 10:
+            grafo.flo()
+            print("===================================")
 
 
 if __name__ == '__main__':
     g = grafos()
     g.file_treatment()
-    g.convert_to_djk()
-    #print(g.identify_edge(0,"0","1"))
+    main_menu(g)
+    #g.convert_to_djk()
+    #g.bel()
+    #g.dij()
+    #kruskaltry.PRIM(g.adjMatrix)
+    #g.flo()
+    #for x in g.adjList:
+       #print("Adjaçentes de "+x,g.find_adj(x,1,g.adjList))
+    #print(len(g.adjMatrix["0"]))
+    #print(len(g.adjMatrix["8"]))
     #g.find_adj("4",0)
     #g.addNode(0)
     #g.DepthFirstSearch("0",g.adjMatrix,"3")
     #g.FindConnectivity()
-
+    #print(g.kruskal(g.adjMatrix))
