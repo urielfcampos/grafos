@@ -5,7 +5,8 @@ import bell
 import dijk
 import floy
 import kruskaltry
-
+import art
+import euler
 class node:
     name:str
     value:int
@@ -80,6 +81,7 @@ class grafos:
             self.nodes_list = nodes[:]
             self.create_repr(int(type))
             self.counter=counter
+
     def addNode(self,type):
         newNode = node(input("nome do vertice"),self.counter+1,input("adjacentes"))
         if type == 1:
@@ -129,7 +131,6 @@ class grafos:
                else:
                    self.adjMatrix[y].append("0")
 
-
     def create_repr(self,type):
         repr_graph = {}
         if type ==0:
@@ -142,6 +143,7 @@ class grafos:
                 repr_graph.update({x.name: x.matriz})
             self.adjList.update(repr_graph)
             print(self.adjList)
+
     def find_value(self,edge1:str):
         value = 0
         for x in self.nodes_list:
@@ -149,6 +151,7 @@ class grafos:
                 value = x.value
                 break
         return value
+
     def find_name(self,value:int):
         name:str
         for x in self.nodes_list:
@@ -156,6 +159,7 @@ class grafos:
                 name = x.name
                 break
         return name
+
     def identify_edge(self,type_rep:int,edge:str,edge1:str):
         if type_rep == 0:
             value = self.find_value(edge1)
@@ -168,12 +172,18 @@ class grafos:
                 return True
             else:
                 return False
+
     def find_adj(self,edge:str,type_rep:int,grafo):
         names = []
         if type_rep ==0:
             for x in range(len(grafo[edge])):
                 if grafo[edge][x]== "1":
                     names.append(self.find_name(x))
+            return names
+        if type_rep ==4:
+            for x in range(len(grafo[edge])):
+                if grafo[edge][x]== "1":
+                    names.append(int(self.find_name(x)))
             return names
         if type_rep==1:
             return self.adjList[edge]
@@ -198,9 +208,6 @@ class grafos:
             for y in self.adjList:
                 if node in self.adjList[y]:
                     self.adjList[y].remove(node)
-
-
-
 
     def DepthFirstSearch(self,source,grafo,function_value):
         global counter_timer
@@ -328,7 +335,6 @@ class grafos:
         for x in formatado.split("/"):
             print("Vertices:",x[0:-1])
 
-
     def make_set(self,v):
         self.pai[v] = v
         self.rank[v] = 0
@@ -381,19 +387,39 @@ class grafos:
         elif type == 2:
             self.adjMatrix[node1][self.find_value(node2)] = input("Peso : ")
 
-    def convert_to_djk(self):
+    def convert_to_djk(self,type):
         grafo = self.adjMatrix.copy()
         grafo_convertido = {}
         names = []
-        for x in grafo:
-            names.append(self.find_adj(x,3,grafo))
-            for y in names:
-                if y == []:
-                    grafo_convertido.update({x: None})
-                else:
-                    grafo_convertido.update({x: y})
-        print(grafo_convertido)
-        self.adjList = grafo_convertido.copy()
+        if type ==0:
+            for x in grafo:
+                names.append(self.find_adj(x,3,grafo))
+                for y in names:
+                    if y == []:
+                        grafo_convertido.update({x: None})
+                    else:
+                        grafo_convertido.update({x: y})
+            self.adjList = grafo_convertido.copy()
+        elif type ==1:
+            for x in grafo:
+                names.append(self.find_adj(x,4,grafo))
+                for y in names:
+                    if y == []:
+                        grafo_convertido.update({x: None})
+                    else:
+                        grafo_convertido.update({x: y})
+            self.adjList = grafo_convertido.copy()
+        elif type == 2:
+            for x in grafo:
+                names.append(self.find_adj(x, 0, grafo))
+                for y in names:
+                    if y == []:
+                        grafo_convertido.update({x: None})
+                    else:
+                        grafo_convertido.update({x: y})
+            self.adjList = grafo_convertido.copy()
+            print(self.adjList)
+
 
     def dij(self,fonte):
         print("Dijkstra:\n")
@@ -445,6 +471,129 @@ class grafos:
         y = floDict2way[input("Informe o nó de chegada:")]
         floy.showPathFloy(antec, x, y,floDict)
 
+    def find_cicle(self, source, grafo, function_value):
+            nova = []
+            ender = []
+            is_here = []
+            global counter_timer
+            counter_timer = 0
+            global connected
+            connected = []
+
+            def visitDFS(node):
+                tired = []
+                global counter_timer
+                global connected
+                counter_timer += 1
+                connected.append(node)
+                print("Visitando", node)
+                color["white"].remove(node)
+                color["gray"].append(node)
+                time[node] = counter_timer
+                print("Cores: ", color)
+                adjs = self.find_adj(node, 0, grafo)
+                print("Vizinhos: ", adjs)
+                for x in adjs:
+                    if x in color["white"]:
+                        pred[x] = node
+                        visitDFS(x)
+                        print(x)
+                    else:
+                        nova.append(x)
+                color["gray"].remove(node)
+                color["black"].append(node)
+                counter_timer += 1
+                time_final[node] += counter_timer
+                if not nova:
+                    test = None
+                else:
+                    test = nova[0]
+
+                for i in color["black"]:
+                    if i not in tired and i != test and test is not None:
+                        if i not in ender:
+                            tired.append(i)
+
+
+                if test in color["black"]:
+
+                    tired.append(nova.pop())
+                    ui = []
+                    while tired:
+                        ui.append(tired.pop())
+                        for c in ui:
+                            if c not in is_here:
+                                is_here.append(c)
+                if is_here and test in color["black"]:
+                    is_here.append(test)
+                elif len(nova) > 1 and len(ender) > 0:
+
+                    nova.append(node)
+                    nova.pop(0)
+                    print(nova)
+                for i in range(len(is_here)):
+                    if is_here[0] not in ender:
+                        ender.append(is_here[0])
+                        is_here.pop(0)
+                    elif is_here[0] in ender:
+
+                        if ender.count(test) == 1:
+                            ender.append(test)
+                            ender.append("")
+                            is_here.pop(0)
+                    else:
+                        is_here.pop(0)
+                print("Finalizando", node)
+                print("Cores finais: ", color)
+                print("Ciclo final: ", ender)
+
+            def iterate_paths(vertex):
+                path = []
+                if pred[vertex][0] != None:
+                    path.append(pred[vertex][0])
+                    path = path + iterate_paths(pred[vertex][0])
+                    print(path)
+                    return path
+                else:
+                    return path
+
+            color = {"white": [], "gray": [], "black": []}
+            pred = {}
+            time = {}
+            time_final = {}
+            print("Comecando busca em profundidade")
+            for x in grafo:
+                color["white"].append(x)
+                pred.update({x: [None]})
+                time.update({x: counter_timer})
+                time_final.update({x: counter_timer})
+            if (function_value == "3"):
+                for x in grafo:
+                    if x in color["white"]:
+                        visitDFS(x)
+                    print("Sem suporte")
+                    break
+                print("Ainda sem suporte")
+
+            return ender
+
+    def bfs(self,graph, start, end):
+        queue = []
+        queue.append([start])
+        while queue:
+            path = queue.pop(0)
+            node = path[-1]
+            if node == end:
+                return path
+            for adjacent in graph.get(node, []):
+                new_path = list(path)
+                new_path.append(adjacent)
+                queue.append(new_path)
+
+
+
+
+
 def main_menu(grafo):
     x = True
     while(x):
@@ -458,6 +607,10 @@ def main_menu(grafo):
         print("Rodar Dijkstra:8")
         print("Rodar Bellmon-ford:9")
         print("Rodar Floyd Warshal:10")
+        print("Achar pontos de articulacao:11")
+        print("Achar ciclos:12")
+        print("Ciclo de Euler:13")
+        print("Menor Caminho :14")
         x = input()
         x = int(x)
         if x == 1:
@@ -477,7 +630,7 @@ def main_menu(grafo):
             grafo.FindConnectivity()
             print("===================================")
         elif x == 5:
-            grafo.DepthFirstSearch("0",grafo.adjMatrix,"3")
+            grafo.DepthFirstSearch(input("fonte"),grafo.adjMatrix,"3")
             print("===================================")
         elif x == 6:
             print(g.kruskal(g.adjMatrix))
@@ -486,7 +639,7 @@ def main_menu(grafo):
             kruskaltry.PRIM(g.adjMatrix)
             print("===================================")
         elif x == 8:
-            grafo.convert_to_djk()
+            grafo.convert_to_djk(0)
             grafo.dij(input("Informe a fonte"))
             print("===================================")
         elif x == 9:
@@ -495,12 +648,32 @@ def main_menu(grafo):
         elif x == 10:
             grafo.flo()
             print("===================================")
+        elif x == 11:
+            grafo.convert_to_djk(2)
+            #print(grafo.adjList)
+            print(art.art_poin(grafo.adjList))
+            print("===================================")
+        elif x == 12:
+            g.find_cicle(input("fonte"), g.adjMatrix, "3")
+            print("===================================")
+        elif x == 13:
+            g.convert_to_djk(1)
+            euler.runEuler(g.adjList.copy())
+            print("===================================")
+        elif x ==14:
+            g.convert_to_djk(2)
+            print(g.bfs(g.adjList, input("Comeco"), input("Final")))
+            print("===================================")
 
 
 if __name__ == '__main__':
     g = grafos()
     g.file_treatment()
     main_menu(g)
+    #g.convert_to_djk(2)
+    #print(g.bfs(g.adjList,"0","5"))
+    #euler.runEuler(g.adjList.copy())
+    #main_menu(g)
     #g.convert_to_djk()
     #g.bel()
     #g.dij()
