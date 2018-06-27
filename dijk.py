@@ -3,7 +3,7 @@
 from g_utils import *
 
 def dijkstrALG(grafo, fonte):
-    a = {no:None for no in grafo} #inicia (a)ntecedencia vazia
+    a = {no:0 for no in grafo} #inicia (a)ntecedencia vazia
     d = {no:float('Inf') for no in grafo} #inicia distância infinita
     d[fonte] = 0 #distancia da fonte = 0
     Q = []

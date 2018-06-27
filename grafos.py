@@ -179,6 +179,7 @@ class grafos:
             for x in range(len(grafo[edge])):
                 if grafo[edge][x]== "1":
                     names.append(self.find_name(x))
+            print(names)
             return names
         if type_rep ==4:
             for x in range(len(grafo[edge])):
@@ -194,7 +195,7 @@ class grafos:
             return names
         if type_rep == 3:
             for x in range(len(grafo[edge])):
-                if int(grafo[edge][x])>= int("1"):
+                if int(grafo[edge][x])!=int("0"):
                     names.append((self.find_name(x),int(grafo[edge][x])))
             return names
 
@@ -396,7 +397,7 @@ class grafos:
                 names.append(self.find_adj(x,3,grafo))
                 for y in names:
                     if y == []:
-                        grafo_convertido.update({x: None})
+                        grafo_convertido.update({x: []})
                     else:
                         grafo_convertido.update({x: y})
             self.adjList = grafo_convertido.copy()
@@ -405,7 +406,7 @@ class grafos:
                 names.append(self.find_adj(x,4,grafo))
                 for y in names:
                     if y == []:
-                        grafo_convertido.update({x: None})
+                        grafo_convertido.update({x: []})
                     else:
                         grafo_convertido.update({x: y})
             self.adjList = grafo_convertido.copy()
@@ -414,7 +415,7 @@ class grafos:
                 names.append(self.find_adj(x, 0, grafo))
                 for y in names:
                     if y == []:
-                        grafo_convertido.update({x: None})
+                        grafo_convertido.update({x: []})
                     else:
                         grafo_convertido.update({x: y})
             self.adjList = grafo_convertido.copy()
@@ -430,9 +431,9 @@ class grafos:
             print("Distância da fonte", fonte, "para os nós:\t", distancias)
             print("Antecessores dos nós:\t\t\t", antecedencias)
 
-    def bel(self):
+    def bel(self,fonte):
         print("Bellman Ford:\n")
-        distancias, antecedencias, cicloneg = bell.bellman_ford(self.adjList, "A")
+        distancias, antecedencias, cicloneg = bell.bellman_ford(self.adjList, fonte)
         if cicloneg:
             print("Ciclo negativo encontrado.")
         else:
@@ -486,18 +487,18 @@ class grafos:
                 global connected
                 counter_timer += 1
                 connected.append(node)
-                print("Visitando", node)
+                #print("Visitando", node)
                 color["white"].remove(node)
                 color["gray"].append(node)
                 time[node] = counter_timer
-                print("Cores: ", color)
+                #print("Cores: ", color)
                 adjs = self.find_adj(node, 0, grafo)
-                print("Vizinhos: ", adjs)
+                #print("Vizinhos: ", adjs)
                 for x in adjs:
                     if x in color["white"]:
                         pred[x] = node
                         visitDFS(x)
-                        print(x)
+                        #print(x)
                     else:
                         nova.append(x)
                 color["gray"].remove(node)
@@ -530,7 +531,7 @@ class grafos:
 
                     nova.append(node)
                     nova.pop(0)
-                    print(nova)
+                    #print(nova)
                 for i in range(len(is_here)):
                     if is_here[0] not in ender:
                         ender.append(is_here[0])
@@ -543,10 +544,13 @@ class grafos:
                             is_here.pop(0)
                     else:
                         is_here.pop(0)
-                print("Finalizando", node)
-                print("Cores finais: ", color)
-                print("Ciclo final: ", ender)
-
+                #print("Finalizando", node)
+                #rint("Cores finais: ", color)
+                #print("Ciclo final: ", ender)
+                #if ender == []:
+                    #print("Nao tem ciclo")
+                #else:
+                    #print("Tem ciclo")
             def iterate_paths(vertex):
                 path = []
                 if pred[vertex][0] != None:
@@ -571,16 +575,25 @@ class grafos:
                 for x in grafo:
                     if x in color["white"]:
                         visitDFS(x)
-                    print("Sem suporte")
+                    #print("Sem suporte")
                     break
-                print("Ainda sem suporte")
-
-            return ender
+                #print("Ainda sem suporte")
+            if ender == []:
+                return "Nao tem ciclo"
+            else:
+                return"Tem ciclo"
+            #return ender
 
     def bfs(self,graph, start, end):
         queue = []
         queue.append([start])
+        counter = 0
+        if self.find_adj(start,1,graph) == []:
+            return "Vertice inicial sem adjacentes"
         while queue:
+            if counter == 1000:
+                print("Nao existe caminho")
+                break
             path = queue.pop(0)
             node = path[-1]
             if node == end:
@@ -589,6 +602,7 @@ class grafos:
                 new_path = list(path)
                 new_path.append(adjacent)
                 queue.append(new_path)
+            counter +=1
 
 
 
@@ -611,13 +625,12 @@ def main_menu(grafo):
         print("Achar ciclos:12")
         print("Ciclo de Euler:13")
         print("Menor Caminho :14")
+        print("Verificar aresta:15")
+        print("Verificar adj:16")
         x = input()
         x = int(x)
         if x == 1:
-            if grafo.type_repr == "0":
-                print(grafo.adjMatrix)
-                print("===================================")
-            elif grafo.type_repr =="1":
+                grafo.convert_to_djk(0)
                 print(grafo.adjList)
                 print("===================================")
         elif x == 2:
@@ -639,37 +652,51 @@ def main_menu(grafo):
             kruskaltry.PRIM(g.adjMatrix)
             print("===================================")
         elif x == 8:
+            grafo.adjList.clear()
             grafo.convert_to_djk(0)
+            print(grafo.adjList)
             grafo.dij(input("Informe a fonte"))
             print("===================================")
         elif x == 9:
-            grafo.bel()
+            grafo.adjList.clear()
+            grafo.convert_to_djk(0)
+            grafo.bel(input("informe a fonte"))
             print("===================================")
         elif x == 10:
+            grafo.adjList.clear()
             grafo.flo()
             print("===================================")
         elif x == 11:
+            grafo.adjList.clear()
             grafo.convert_to_djk(2)
             #print(grafo.adjList)
             print(art.art_poin(grafo.adjList))
             print("===================================")
         elif x == 12:
-            g.find_cicle(input("fonte"), g.adjMatrix, "3")
+            print(g.find_cicle(input("fonte"), g.adjMatrix, "3"))
             print("===================================")
         elif x == 13:
+            grafo.adjList.clear()
             g.convert_to_djk(1)
             euler.runEuler(g.adjList.copy())
             print("===================================")
         elif x ==14:
+            grafo.adjList.clear()
             g.convert_to_djk(2)
-            print(g.bfs(g.adjList, input("Comeco"), input("Final")))
+            print(g.bfs(g.adjList.copy(), input("Comeco"), input("Final")))
             print("===================================")
-
+        elif x ==15:
+            print(grafo.identify_edge(0,input("V1"),input("V2")))
+            print("===================================")
+        elif x == 16:
+            print(grafo.find_adj(input("vertice"),0,g.adjMatrix))
+            print("===================================")
 
 if __name__ == '__main__':
     g = grafos()
     g.file_treatment()
     main_menu(g)
+    #print(g.find_adj("D",0,g.adjMatrix))
     #g.convert_to_djk(2)
     #print(g.bfs(g.adjList,"0","5"))
     #euler.runEuler(g.adjList.copy())
