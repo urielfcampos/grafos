@@ -14,9 +14,9 @@ tratar todas as fontes caminhos minimos(inclusive se nao existir caminho) BFS- D
 
 TRABALHO GRAFOS
 
-0
+0  A B C D E F G H I J
 A:[0,1,1,0,0,0,0,0,0,0]
-B:[0,0,0,0,1,0,0,0,1,0]
+B:[0,0,0,0,0,0,0,0,1,0]
 C:[0,0,0,1,0,0,0,0,0,0]
 D:[1,0,0,0,1,1,0,0,0,0]
 E:[0,0,0,0,0,1,0,0,0,0]

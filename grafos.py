@@ -215,9 +215,12 @@ class grafos:
         counter_timer =0
         global connected
         connected = []
+        global cycle
+        cycle = False
         def visitDFS(node):
             global counter_timer
             global  connected
+            global cycle
             counter_timer += 1
             connected.append(node)
             color["white"].remove(node)
@@ -225,6 +228,8 @@ class grafos:
             time[node] =counter_timer
             adjs = self.find_adj(node,0,grafo)
             for x in adjs:
+                if x in color["gray"] and x not in pred[node]:
+                    cycle = True
                 if x in color["white"]:
                     pred[x] = node
                     visitDFS(x)
@@ -262,8 +267,14 @@ class grafos:
             if i not in color["black"]:
                 visitDFS(i)
                 connected.append("")
-
-
+        if (function_value =="4"):
+            for x in grafo:
+                if x in color["white"]:
+                    visitDFS(x)
+            if cycle:
+                print("Tem ciclo")
+            else:
+                print("Nao tem ciclo")
         #print(time_final)
         #print(time)
         #print(color["black"])
@@ -472,117 +483,6 @@ class grafos:
         y = floDict2way[input("Informe o nó de chegada:")]
         floy.showPathFloy(antec, x, y,floDict)
 
-    def find_cicle(self, source, grafo, function_value):
-            nova = []
-            ender = []
-            is_here = []
-            global counter_timer
-            counter_timer = 0
-            global connected
-            connected = []
-
-            def visitDFS(node):
-                tired = []
-                global counter_timer
-                global connected
-                counter_timer += 1
-                connected.append(node)
-                #print("Visitando", node)
-                color["white"].remove(node)
-                color["gray"].append(node)
-                time[node] = counter_timer
-                #print("Cores: ", color)
-                adjs = self.find_adj(node, 0, grafo)
-                #print("Vizinhos: ", adjs)
-                for x in adjs:
-                    if x in color["white"]:
-                        pred[x] = node
-                        visitDFS(x)
-                        #print(x)
-                    else:
-                        nova.append(x)
-                color["gray"].remove(node)
-                color["black"].append(node)
-                counter_timer += 1
-                time_final[node] += counter_timer
-                if not nova:
-                    test = None
-                else:
-                    test = nova[0]
-
-                for i in color["black"]:
-                    if i not in tired and i != test and test is not None:
-                        if i not in ender:
-                            tired.append(i)
-
-
-                if test in color["black"]:
-
-                    tired.append(nova.pop())
-                    ui = []
-                    while tired:
-                        ui.append(tired.pop())
-                        for c in ui:
-                            if c not in is_here:
-                                is_here.append(c)
-                if is_here and test in color["black"]:
-                    is_here.append(test)
-                elif len(nova) > 1 and len(ender) > 0:
-
-                    nova.append(node)
-                    nova.pop(0)
-                    #print(nova)
-                for i in range(len(is_here)):
-                    if is_here[0] not in ender:
-                        ender.append(is_here[0])
-                        is_here.pop(0)
-                    elif is_here[0] in ender:
-
-                        if ender.count(test) == 1:
-                            ender.append(test)
-                            ender.append("")
-                            is_here.pop(0)
-                    else:
-                        is_here.pop(0)
-                #print("Finalizando", node)
-                #rint("Cores finais: ", color)
-                #print("Ciclo final: ", ender)
-                #if ender == []:
-                    #print("Nao tem ciclo")
-                #else:
-                    #print("Tem ciclo")
-            def iterate_paths(vertex):
-                path = []
-                if pred[vertex][0] != None:
-                    path.append(pred[vertex][0])
-                    path = path + iterate_paths(pred[vertex][0])
-                    print(path)
-                    return path
-                else:
-                    return path
-
-            color = {"white": [], "gray": [], "black": []}
-            pred = {}
-            time = {}
-            time_final = {}
-            print("Comecando busca em profundidade")
-            for x in grafo:
-                color["white"].append(x)
-                pred.update({x: [None]})
-                time.update({x: counter_timer})
-                time_final.update({x: counter_timer})
-            if (function_value == "3"):
-                for x in grafo:
-                    if x in color["white"]:
-                        visitDFS(x)
-                    #print("Sem suporte")
-                    break
-                #print("Ainda sem suporte")
-            if ender == []:
-                return "Nao tem ciclo"
-            else:
-                return"Tem ciclo"
-            #return ender
 
     def bfs(self,graph, start, end):
         queue = []
@@ -673,7 +573,7 @@ def main_menu(grafo):
             print(art.art_poin(grafo.adjList))
             print("===================================")
         elif x == 12:
-            print(g.find_cicle(input("fonte"), g.adjMatrix, "3"))
+            g.DepthFirstSearch("0",g.adjMatrix,"4")
             print("===================================")
         elif x == 13:
             grafo.adjList.clear()
@@ -695,6 +595,7 @@ def main_menu(grafo):
 if __name__ == '__main__':
     g = grafos()
     g.file_treatment()
+    #print(g.find_cicle("0",g.adjMatrix,"3"))
     main_menu(g)
     #print(g.find_adj("D",0,g.adjMatrix))
     #g.convert_to_djk(2)
